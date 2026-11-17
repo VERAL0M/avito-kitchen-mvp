@@ -1,0 +1,40 @@
+services:
+  backend:
+    working_dir: /auth
+    environment:
+      PYTHONPATH: /auth/src
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: kitchen
+      POSTGRES_USER: kitchen
+      POSTGRES_PASS: kitchen
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ".venv/bin/gunicorn -c conf/gunicorn.conf.py 'auth.run:make_app()'"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: kitchen
+      POSTGRES_USER: kitchen
+      POSTGRES_DB: kitchen
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitchen -d kitchen"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  restaurant-demo:
+    build:
+      context: ./restaurant_demo
+    ports:
+      - "8082:8081"
+    environment:
+      PLATFORM_URL: http://backend:8000/restaurants/
+
