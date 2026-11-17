@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: Avito.Кухня MVP
+  version: 0.1.0
+  description: Минимальный API для просмотра меню и оформления заказа.
+paths:
+  /restaurants/:
+    get:
+      summary: Список заведений
+      responses:
+        '200': { description: Список заведений }
+  /restaurants/{restaurant_id}/menu:
+    get:
+      summary: Меню заведения
+      parameters:
+        - in: path
+          name: restaurant_id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Меню }
+  /orders/:
+    get:
+      summary: Список заказов с фильтром по статусу
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [new, confirmed, canceled] }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200': { description: Список заказов }
+    post:
+      summary: Создать заказ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [product_name, quantity, unit_price]
+                    properties:
+                      product_name: { type: string }
+                      quantity: { type: integer, minimum: 1 }
+                      unit_price: { type: number, minimum: 0.01 }
+      responses:
+        '201': { description: Заказ создан }
+        '400': { description: Некорректные данные }
+  /orders/{order_id}:
+    get:
+      summary: Детали заказа
+      responses:
+        '200': { description: Заказ найден }
+        '404': { description: Заказ не найден }
+  /orders/{order_id}/cancel:
+    post:
+      summary: Отменить новый заказ
+  /orders/{order_id}/confirm:
+    post:
+      summary: Подтвердить заказ (демонстрационное API заведения)
+      responses:
+        '200': { description: Заказ подтверждён }
+        '409': { description: Заказ нельзя подтвердить }
